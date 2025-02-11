@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - development
 
 jobs:
   check-pr-source:
@@ -11,12 +12,20 @@ jobs:
     steps:
       - name: Check PR source branch
         run: |
+          TARGET_BRANCH=${{ github.base_ref }}
           SOURCE_BRANCH=${{ github.head_ref }}
-          if [[ "$SOURCE_BRANCH" == "development" || "$SOURCE_BRANCH" == hotfix/* ]]; then
-            echo "PR is from an allowed branch: $SOURCE_BRANCH"
-            exit 0
-          else
-            echo "Error: PRs to main must come from 'development' or 'hotfix/*' branches"
-            echo "Current source branch: $SOURCE_BRANCH"
-            exit 1
+          
+          if [[ "$TARGET_BRANCH" == "main" ]]; then
+            if [[ "$SOURCE_BRANCH" == "development" || "$SOURCE_BRANCH" == hotfix/* ]]; then
+              echo "PR to main is from an allowed branch: $SOURCE_BRANCH"
+              exit 0
+            else
+              echo "Error: PRs to main must come from 'development' or 'hotfix/*' branches"
+              exit 1
+            fi
+          elif [[ "$TARGET_BRANCH" == "development" ]]; then
+            if [[ "$SOURCE_BRANCH" == hotfix/* ]]; then
+              echo "Error: Hotfix branches cannot merge directly to development"
+              exit 1
+            fi
           fi
