@@ -1,0 +1,25 @@
+name: Sync Main to Development
+
+on:
+  push:
+    branches:
+      - main 
+
+jobs:
+  sync-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Sync main to development 
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+
+          git checkout development
+          git pull origin development
+          git merge origin/main -m "Automatic sync from main to dev after changes"
+          git push origin development
+          
