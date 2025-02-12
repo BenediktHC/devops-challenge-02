@@ -1,0 +1,25 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: true
+  become: true
+
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+  become: true
+
+- name: Start and enabled Nginx
+  service:
+    name: nginx
+    state: started
+    enabled: true
+  become: true
+
+- name: Configure Nginx
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  notify: Reload Nginx
+  become: true
