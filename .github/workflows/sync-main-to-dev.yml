@@ -22,5 +22,10 @@ jobs:
           git checkout development
           git pull origin development
           git merge origin/main -m "Automatic sync from main to dev after changes"
+
+          # Token for push to avoid errors
+          git remote set-url origin https://x-access-token:${SYNC_TOKEN}@github.com/${{ github.repository }}
           git push origin development
+        env:
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
           
