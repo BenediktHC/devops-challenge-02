@@ -1,0 +1,42 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: true
+  become: true
+
+- name: Install ACL package
+  apt:
+    name: acl 
+    state: present
+    update_cache: true
+  become: true
+
+- name: Install PostgreSQL
+  apt:
+    name:
+      - postgresql 
+      - postgresql-contrib
+      - python3-psycopg2      # Required for Ansible PostgreSQL modules
+    state: present
+  become: true 
+
+- name: Ensure PostgreSQL is started
+  service:
+    name: postgresql 
+    state: started
+    enabled: true
+  become: true
+
+- name: Create database user
+  postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+  become: true
+  become_user: postgres 
+
+- name: Create database 
+  postgresql_db:
+    name: "{{ db_name }}"
+    owner: "{{ db_user }}"
+  become: true 
+  become_user: postgres 

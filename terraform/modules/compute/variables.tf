@@ -29,3 +29,14 @@ variable "create_reverse_proxy" {
   type        = bool
   default     = false
 }
+
+variable "ssh_key_name" {
+  description = "Name of SSH key pair"
+  type        = string
+  default     = "ansible-key"
+}
+
+variable "private_subnet_cidr" {
+  description = "CIDR block for private subnet"
+  type        = string
+}

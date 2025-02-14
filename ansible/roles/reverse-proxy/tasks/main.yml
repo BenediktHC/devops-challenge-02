@@ -1,0 +1,25 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: true 
+  become: true 
+
+- name: Install Nginx
+  apt:
+    name: nginx 
+    state: present 
+  become: true 
+
+- name: Configure Nginx load balancer 
+  template:
+    src: loadbalancer.conf.j2
+    dest: /etc/nginx/sites-available/default
+  notify: Reload Nginx
+  become: true 
+
+- name: Start and enable Nginx 
+  service:
+    name: nginx
+    state: started
+    enabled: true 
+  become: true
