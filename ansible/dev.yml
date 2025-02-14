@@ -1,0 +1,10 @@
+---
+- hosts: webservers
+  roles:
+    - webserver 
+
+- hosts: databases
+  roles:
+    - database 
+  vars:
+    db_name: "appdb"

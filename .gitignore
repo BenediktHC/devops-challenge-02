@@ -8,3 +8,7 @@ crash.log
 crash.*.log
 *.tfvars
 *.tfvars.json
+
+# Ansible Vault 
+vault.yml
+.vault_pass.txt

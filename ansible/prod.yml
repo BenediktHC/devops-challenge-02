@@ -1,0 +1,17 @@
+---
+- hosts: webservers 
+  roles:
+    - webserver 
+
+- hosts: databases 
+  roles:
+    - database 
+  vars:
+    db_name: "appdb"
+
+- hosts: reverse_proxy
+  roles:
+    - reverse-proxy
+  vars:
+    web_servers: "{{ groups['webservers'] }}"
+    
