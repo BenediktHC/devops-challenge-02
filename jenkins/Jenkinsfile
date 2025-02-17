@@ -1,0 +1,64 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_DEFAULT_REGION = 'eu-central-1'
+    }
+
+    stages {
+        stage('Determine Environment') {
+            steps {
+                script {
+                    // Setting env based on branch
+                    env.DEPLOY_ENV = env.BRANCH_NAME == 'main' ? 'prod' : 'dev'
+                    echo "Deploying to ${env.DEPLOY_ENV} environment"
+                }
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir("terraform/environments/${env.DEPLOY_ENV}") {
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir("terraform/environments/${env.DEPLOY_ENV}") {
+                    sh 'terraform plan'
+                }
+            }
+        }
+
+        stage('Approval') {
+            when {
+                expression { env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'development' }
+            }
+            steps {
+                input message: "Deploy to ${env.DEPLOY_ENV}?"
+            }
+        }
+
+        stage('Apply') {
+            when {
+                expression { env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'development' }
+            }
+            steps {
+                dir("terraform/environments/${env.DEPLOY_ENV}") {
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
+
+        stage('Smoke Tests') {
+            when {
+                expression { env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'development' }
+            }
+            steps {
+                echo "Running smoke tests for ${env.DEPLOY_ENV} environment"
+            }
+        }
+    }
+}
