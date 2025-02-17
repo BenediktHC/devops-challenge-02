@@ -173,6 +173,13 @@ resource "null_resource" "ansible_provisioner" {
    aws_instance.reverse_proxy
  ]
 
+ # Trigger for the provisioner whenever IPs change so it can be changed in Ansible 
+ triggers = {
+   web_ips = join(",", aws_instance.web[*].public_ip)
+   db_ip = aws_instance.db.private_ip
+   reverse_proxy_ip = var.create_reverse_proxy ? aws_instance.reverse_proxy[0].public_ip : ""
+ }
+
  provisioner "local-exec" {
    command = <<EOT
 #!/bin/bash
@@ -188,7 +195,6 @@ ${aws_instance.db.private_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~
 
 [reverse_proxy]
 ${var.create_reverse_proxy ? "${aws_instance.reverse_proxy[0].public_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_extra_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'" : ""}
-EOF
 
 echo "Waiting for instances to be ready..."
 sleep 120

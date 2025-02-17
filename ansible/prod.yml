@@ -14,4 +14,3 @@
     - reverse-proxy
   vars:
     web_servers: "{{ groups['webservers'] }}"
-    
