@@ -92,7 +92,7 @@ resource "aws_instance" "jenkins" {
   }
 
   lifecycle {
-    # prevent_destroy = true
+    prevent_destroy = true
   }
 
   tags = {
