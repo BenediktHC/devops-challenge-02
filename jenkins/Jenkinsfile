@@ -1,6 +1,6 @@
 pipeline {
     agent any
-
+    
     environment {
         AWS_DEFAULT_REGION = 'eu-central-1'
     }
@@ -9,9 +9,27 @@ pipeline {
         stage('Determine Environment') {
             steps {
                 script {
-                    // Setting env based on branch
-                    env.DEPLOY_ENV = env.BRANCH_NAME == 'main' ? 'prod' : 'dev'
-                    echo "Deploying to ${env.DEPLOY_ENV} environment"
+                    switch(env.BRANCH_NAME) {
+                        case 'main':
+                            env.DEPLOY_ENV = 'prod'
+                            env.SHOULD_DEPLOY = 'true'
+                            break
+                        case 'development':
+                            env.DEPLOY_ENV = 'dev'
+                            env.SHOULD_DEPLOY = 'true'
+                            break
+                        case ~/^hotfix\/.*/:
+                            env.DEPLOY_ENV = 'prod'
+                            env.SHOULD_DEPLOY = 'true'
+                            break
+                        case ~/^feature\/.*/:
+                            env.DEPLOY_ENV = 'dev'
+                            env.SHOULD_DEPLOY = 'false'
+                            break
+                        default:
+                            error("Branch ${env.BRANCH_NAME} not supported")
+                    }
+                    echo "Branch: ${env.BRANCH_NAME}, Environment: ${env.DEPLOY_ENV}, Deploy: ${env.SHOULD_DEPLOY}"
                 }
             }
         }
@@ -34,7 +52,7 @@ pipeline {
 
         stage('Approval') {
             when {
-                expression { env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'development' }
+                expression { env.SHOULD_DEPLOY == 'true' }
             }
             steps {
                 input message: "Deploy to ${env.DEPLOY_ENV}?"
@@ -43,7 +61,7 @@ pipeline {
 
         stage('Apply') {
             when {
-                expression { env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'development' }
+                expression { env.SHOULD_DEPLOY == 'true' }
             }
             steps {
                 dir("terraform/environments/${env.DEPLOY_ENV}") {
@@ -54,10 +72,25 @@ pipeline {
 
         stage('Smoke Tests') {
             when {
-                expression { env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'development' }
+                expression { env.SHOULD_DEPLOY == 'true' }
             }
             steps {
-                echo "Running smoke tests for ${env.DEPLOY_ENV} environment"
+                script {
+                    def webIps = sh(
+                        script: "cd terraform/environments/${env.DEPLOY_ENV} && terraform output -json web_public_ips | jq -r 'join(\",\")'",
+                        returnStdout: true
+                    ).trim()
+                    
+                    def dbIp = sh(
+                        script: "cd terraform/environments/${env.DEPLOY_ENV} && terraform output -raw db_private_ip",
+                        returnStdout: true
+                    ).trim()
+
+                    sh """
+                        chmod +x jenkins/scripts/smoke_tests.sh
+                        jenkins/scripts/smoke_tests.sh ${env.DEPLOY_ENV} ${webIps} ${dbIp}
+                    """
+                }
             }
         }
     }
