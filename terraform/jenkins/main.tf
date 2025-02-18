@@ -92,7 +92,7 @@ resource "aws_instance" "jenkins" {
   }
 
   lifecycle {
-    prevent_destroy = true
+    #prevent_destroy = true
   }
 
   tags = {
@@ -100,6 +100,19 @@ resource "aws_instance" "jenkins" {
   }
 }
 
+resource "aws_eip" "jenkins" {
+  instance  = aws_instance.jenkins.id
+  vpc       = true
+
+  tags = {
+    Name = "jenkins-eip"
+  }
+}
+
 output "jenkins_public_ip" {
   value = aws_instance.jenkins.public_ip
+}
+
+output "jenkins_eip" {
+  value = aws_eip.jenkins.public_ip
 }
