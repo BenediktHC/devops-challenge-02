@@ -87,8 +87,8 @@ pipeline {
                     ).trim()
 
                     sh """
-                        chmod +x scripts/smoke-tests/run_tests.sh
-                        scripts/smoke-tests/run_tests.sh ${env.DEPLOY_ENV} ${webIps} ${dbIp}
+                        chmod +x jenkins/scripts/smoke_tests.sh
+                        jenkins/scripts/smoke_tests.sh ${env.DEPLOY_ENV} ${webIps} ${dbIp}
                     """
                 }
             }
