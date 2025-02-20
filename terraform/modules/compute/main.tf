@@ -191,10 +191,11 @@ cat > inventory/${var.environment} <<EOF
 ${join("\n", [for ip in aws_instance.web[*].public_ip : "${ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_extra_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'"])}
 
 [databases]
-${aws_instance.db.private_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -q ubuntu@${aws_instance.web[0].public_ip}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+${aws_instance.db.private_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -q ubuntu@${aws_instance.web[0].public_ip}" -o ForwardAgent=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 
 [reverse_proxy]
 ${var.create_reverse_proxy ? "${aws_instance.reverse_proxy[0].public_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_extra_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'" : ""}
+EOF
 
 echo "Waiting for instances to be ready..."
 sleep 120
