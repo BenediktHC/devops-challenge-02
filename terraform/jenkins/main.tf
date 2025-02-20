@@ -92,7 +92,7 @@ resource "aws_instance" "jenkins" {
   }
 
   lifecycle {
-    #prevent_destroy = true
+    prevent_destroy = true
   }
 
   tags = {
@@ -106,6 +106,17 @@ resource "aws_eip" "jenkins" {
 
   tags = {
     Name = "jenkins-eip"
+  }
+}
+
+resource "aws_ebs_snapshot" "jenkins_snapshot" {
+  volume_id = aws_instance.jenkins.root_block_device[0].volume_id
+
+  tags = {
+    Name = "jenkins-snapshot"
+  }
+  lifecycle {
+    create_before_destroy = true
   }
 }
 

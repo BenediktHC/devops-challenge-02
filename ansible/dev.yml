@@ -8,3 +8,5 @@
     - database 
   vars:
     db_name: "appdb"
+    db_user: "{{ db_user }}"
+    db_password: "{{ db_password }}"
